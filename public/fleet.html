@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fleet chat · Jev-ZK Guard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="grid-bg" aria-hidden="true"></div>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <p class="brand-name">Fleet chat</p>
+          <p class="brand-sub">Lead plans · Jev routes · Hands / Reviewer / Lead</p>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="ghost" href="/" style="text-decoration:none;padding:0.55rem 0.85rem;border:1px solid var(--line);border-radius:0.55rem;color:inherit">Guard</a>
+        <div class="status" id="health">
+          <span class="dot"></span>
+          <span id="health-text">…</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel wide saas-creds">
+        <h2>Identity</h2>
+        <div class="creds-grid">
+          <label class="field"><span>API secret</span><input id="api-secret" type="password" value="jzg_demo_secret" /></label>
+          <label class="field"><span>Tenant</span><input id="tenant-id" type="text" value="dev" /></label>
+          <label class="field"><span>Agent</span><input id="agent-id" type="text" value="fleet-console" /></label>
+        </div>
+      </section>
+
+      <section class="panels fleet-layout">
+        <article class="panel chat-panel">
+          <h2>Chat</h2>
+          <p class="hint">Describe a goal — fleet orchestrates automatically.</p>
+          <div class="chat-log" id="chat-log"></div>
+          <form id="chat-form" class="chat-form">
+            <textarea
+              id="chat-input"
+              rows="2"
+              placeholder="Add a healthcheck endpoint and refactor auth"
+              autocomplete="off"
+            ></textarea>
+            <div class="chat-actions">
+              <button type="submit" class="primary" id="btn-send">Send</button>
+              <button type="button" class="secondary" id="btn-plan">Build plan</button>
+              <button type="button" class="secondary" id="btn-build" disabled>Build project</button>
+            </div>
+          </form>
+          <p class="hint" id="job-status">Build plan → workspace → Build project (live transcript).</p>
+        </article>
+
+        <article class="panel fleet-visual">
+          <h2>Agents</h2>
+          <p class="hint">Who speaks · routed by Jev complexity</p>
+          <div class="agent-graph" id="agent-graph" aria-live="polite">
+            <p class="graph-empty mono">Send a goal to see the fleet graph.</p>
+          </div>
+          <ol class="steps steps-compact" id="timeline"></ol>
+
+          <h2 class="transcript-heading">Executor</h2>
+          <div class="exec-meta" id="exec-meta">No job yet — Build plan / Build project</div>
+          <pre class="exec-transcript" id="exec-transcript" aria-live="polite"></pre>
+        </article>
+      </section>
+    </main>
+    <script src="/fleet.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/
+# fleet run sandboxes (also covered by data/)
+data/fleet/workspaces/
+.env
+*.log

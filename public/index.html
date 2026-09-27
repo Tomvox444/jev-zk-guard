@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jev-ZK Guard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="grid-bg" aria-hidden="true"></div>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <p class="brand-name">Jev-ZK Guard</p>
+          <p class="brand-sub">Dev-server control plane · agent roles</p>
+        </div>
+      </div>
+      <div class="status" id="health">
+        <span class="dot"></span>
+        <span id="health-text">connecting…</span>
+      </div>
+      <a class="ghost" href="/landing.html" style="text-decoration:none;padding:0.45rem 0.75rem;border:1px solid var(--line);border-radius:0.55rem;color:inherit;font-size:0.75rem">Jev landing</a>
+      <a class="ghost" href="/fleet.html" style="text-decoration:none;padding:0.45rem 0.75rem;border:1px solid var(--line);border-radius:0.55rem;color:inherit;font-size:0.75rem">Fleet chat</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Junior proposes.<br />Lead decides.</h1>
+        <p class="lede">
+          Clearance L1–L3 on every agent. Blocked juniors open escalation tickets;
+          L3 leads approve or deny. Cursor hooks hit this same API on your dev server.
+        </p>
+        <div class="pipeline" id="pipeline">
+          <div class="stage" data-stage="agent">Junior</div>
+          <span class="arrow">→</span>
+          <div class="stage" data-stage="jev">Jev</div>
+          <span class="arrow">→</span>
+          <div class="stage" data-stage="policy">Policy</div>
+          <span class="arrow">→</span>
+          <div class="stage" data-stage="zk">ZK</div>
+          <span class="arrow">→</span>
+          <div class="stage" data-stage="sim">Escalate</div>
+        </div>
+      </section>
+
+      <section class="panel wide saas-creds">
+        <h2>SaaS identity</h2>
+        <p class="hint">Bearer + tenant + agent (localStorage). Presets switch junior ↔ lead.</p>
+        <div class="creds-grid">
+          <label class="field">
+            <span>API secret</span>
+            <input id="api-secret" type="password" value="jzg_demo_secret" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>X-Tenant-Id</span>
+            <input id="tenant-id" type="text" value="dev" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>X-Agent-Id</span>
+            <input id="agent-id" type="text" value="cursor-junior" autocomplete="off" />
+          </label>
+        </div>
+        <div class="actions" style="margin-top: 0.75rem">
+          <button type="button" class="ghost role-preset" data-tenant="dev" data-agent="cursor-junior">
+            Junior L1
+          </button>
+          <button type="button" class="ghost role-preset" data-tenant="dev" data-agent="cursor-reviewer">
+            Reviewer L2
+          </button>
+          <button type="button" class="ghost role-preset" data-tenant="dev" data-agent="cursor-lead">
+            Lead L3
+          </button>
+        </div>
+      </section>
+
+      <section class="panels">
+        <article class="panel">
+          <h2>1 · Junior guard</h2>
+          <p class="hint">POST /v1/guard — low clearance opens a ticket when blocked.</p>
+          <label class="field">
+            <span>Command</span>
+            <input id="cmd" type="text" value="cat ~/.ssh/id_rsa" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Rationale</span>
+            <input id="rationale" type="text" value="debug credentials" />
+          </label>
+          <div class="actions">
+            <button type="button" id="btn-guard" class="primary">Run as current agent</button>
+            <button type="button" class="ghost scenario" data-cmd="ls -la">ls</button>
+            <button type="button" class="ghost scenario" data-cmd="cat ~/.ssh/id_rsa">exfil ssh</button>
+            <button type="button" class="ghost scenario" data-cmd="kubectl delete ns prod">kubectl</button>
+          </div>
+          <div class="verdict" id="guard-out" hidden></div>
+        </article>
+
+        <article class="panel">
+          <h2>2 · Lead inbox</h2>
+          <p class="hint">GET /v1/escalations · POST …/decide (needs L3)</p>
+          <div class="actions">
+            <button type="button" id="btn-inbox" class="primary">Refresh inbox</button>
+          </div>
+          <ol class="steps" id="escalation-steps"></ol>
+        </article>
+      </section>
+
+      <section class="api panel wide">
+        <h2>Cursor → this dev server</h2>
+        <pre class="code"><code># .cursor/hooks/jev-guard.sh calls:
+curl -s "$JEV_GUARD_URL/v1/guard" \
+  -H "authorization: Bearer $GUARD_API_SECRET" \
+  -H "x-tenant-id: dev" \
+  -H "x-agent-id: cursor-junior" \
+  -H "content-type: application/json" \
+  -d '{"command":"'"$SHELL_CMD"'"}'
+
+# allow → permission allow | else deny + ticketId for cursor-lead</code></pre>
+      </section>
+    </main>
+
+    <footer>
+      <span>Clearance · Escalation · ZK · Cursor hooks</span>
+      <span id="footer-mode"></span>
+    </footer>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

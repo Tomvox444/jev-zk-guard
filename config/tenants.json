@@ -1,0 +1,115 @@
+{
+  "tenants": {
+    "dev": {
+      "name": "Dev Server",
+      "active": true,
+      "policyProfile": "default",
+      "agents": {
+        "fleet-console": {
+          "active": true,
+          "label": "Fleet chat console",
+          "role": "lead",
+          "clearance": "L3",
+          "maxComplexity": 1.0
+        },
+        "cursor-junior": {
+          "active": true,
+          "label": "Cursor junior hands",
+          "role": "hands",
+          "clearance": "L1",
+          "maxComplexity": 0.35,
+          "escalatesTo": "cursor-lead"
+        },
+        "cursor-reviewer": {
+          "active": true,
+          "label": "Cursor reviewer",
+          "role": "reviewer",
+          "clearance": "L2",
+          "maxComplexity": 0.7,
+          "escalatesTo": "cursor-lead"
+        },
+        "cursor-lead": {
+          "active": true,
+          "label": "Cursor lead",
+          "role": "lead",
+          "clearance": "L3",
+          "maxComplexity": 1.0
+        },
+        "worker-7": {
+          "active": true,
+          "label": "batch junior",
+          "role": "hands",
+          "clearance": "L1",
+          "maxComplexity": 0.35,
+          "escalatesTo": "cursor-lead"
+        }
+      }
+    },
+    "acme": {
+      "name": "Acme Cloud",
+      "active": true,
+      "policyProfile": "default",
+      "agents": {
+        "worker-7": {
+          "active": true,
+          "label": "gemini-fast junior",
+          "role": "hands",
+          "clearance": "L1",
+          "maxComplexity": 0.35,
+          "escalatesTo": "opus-lead"
+        },
+        "coder-1": {
+          "active": true,
+          "label": "coding agent L2",
+          "role": "reviewer",
+          "clearance": "L2",
+          "maxComplexity": 0.7,
+          "escalatesTo": "opus-lead"
+        },
+        "opus-lead": {
+          "active": true,
+          "label": "claude-opus senior",
+          "role": "lead",
+          "clearance": "L3",
+          "maxComplexity": 1.0
+        }
+      }
+    },
+    "demo": {
+      "name": "Hackathon Demo",
+      "active": true,
+      "policyProfile": "strict",
+      "agents": {
+        "jury-bot": {
+          "active": true,
+          "label": "jury demo agent",
+          "role": "hands",
+          "clearance": "L1",
+          "maxComplexity": 0.35,
+          "escalatesTo": "sandbox-1"
+        },
+        "sandbox-1": {
+          "active": true,
+          "label": "sandbox senior",
+          "role": "lead",
+          "clearance": "L3",
+          "maxComplexity": 1.0
+        }
+      }
+    },
+    "retired": {
+      "name": "Retired Org",
+      "active": false,
+      "policyProfile": "default",
+      "agents": {
+        "old-1": {
+          "active": false,
+          "label": "decommissioned",
+          "role": "hands",
+          "clearance": "L1",
+          "maxComplexity": 0.35
+        }
+      }
+    }
+  }
+}

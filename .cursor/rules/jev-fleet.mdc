@@ -1,0 +1,51 @@
+---
+description: Fleet orchestration + Jev-ZK Guard for local Cursor agents
+alwaysApply: true
+---
+
+# Jev-ZK Guard · Cursor local fleet
+
+This repo runs a **local control plane** (`npm run serve` → `http://127.0.0.1:8787`).
+
+## OpenRouter / Jev
+
+If OpenRouter is unreachable, the server falls back to stub scores automatically. Prefer a valid `OPENROUTER_API_KEY` for live Jev.
+
+## Before non-trivial work
+
+1. Ensure the guard server is up (`npm run serve`).
+2. Route the user goal through the fleet orchestrator:
+
+```bash
+npm run fleet -- "USER GOAL HERE"
+```
+
+3. Read the JSON: Lead plan → complexity buckets → Hands / Reviewer / Lead steps.
+4. **Follow the assignment**:
+   - `hands` / low → you (or a Task subagent) do basic implement
+   - `reviewer` / medium → verify junior output or do medium tasks
+   - `lead` / high + finalize → you structure, organize, final check
+5. Shell commands are gated by `.cursor/hooks/jev-guard.mjs` (`beforeShellExecution`).  
+   Identity defaults: tenant `dev`, agent `cursor-junior`.  
+   For lead actions: `JEV_AGENT_ID=cursor-lead`.  
+   Escape hatch: `JEV_GUARD_BYPASS=1`.
+
+## Roles (tenant `dev`)
+
+| Agent | Role | Clearance |
+|-------|------|-----------|
+| `cursor-junior` | hands | L1 |
+| `cursor-reviewer` | reviewer | L2 |
+| `cursor-lead` / `fleet-console` | lead | L3 |
+
+## Escalation
+
+If a shell is denied, a ticket is opened. Decide as lead:
+
+```bash
+# list
+curl -s http://127.0.0.1:8787/v1/escalations -H "authorization: Bearer jzg_demo_secret" \
+  -H "x-tenant-id: dev" -H "x-agent-id: cursor-lead"
+```
+
+UI: http://127.0.0.1:8787/fleet.html and http://127.0.0.1:8787/

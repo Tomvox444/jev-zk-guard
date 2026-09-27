@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "node .cursor/hooks/jev-guard.mjs",
+        "failClosed": true
+      }
+    ]
+  }
+}

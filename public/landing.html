@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jev — typed decisions for agents</title>
+    <meta
+      name="description"
+      content="Jev is TypeSafe AI’s System One model: fast, typed decisions—choice, score, or yes/no—with calibrated confidence. Not another chat LLM."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/landing.css" />
+  </head>
+  <body>
+    <header class="site-nav">
+      <a class="nav-brand" href="/landing.html" aria-label="Jev home">Jev</a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#primitives">Primitives</a>
+        <a class="nav-cta" href="https://www.jevtypesafeai.com/" rel="noopener" target="_blank"
+          >Get Jev</a
+        >
+      </nav>
+    </header>
+
+    <section class="hero" aria-label="Hero">
+      <div class="hero-media" aria-hidden="true">
+        <img
+          src="/landing/hero.jpg"
+          alt=""
+          width="2400"
+          height="1350"
+          fetchpriority="high"
+        />
+      </div>
+      <div class="hero-veil" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="brand-lockup">Jev</p>
+        <h1>The model that returns decisions, not paragraphs.</h1>
+        <p class="hero-lede">
+          Typed choice, score, or yes/no—calibrated and schema-locked—in
+          70–500&nbsp;ms. Built for agents that need to branch, not chat.
+        </p>
+        <div class="hero-actions">
+          <a
+            class="btn primary"
+            href="https://www.jevtypesafeai.com/"
+            rel="noopener"
+            target="_blank"
+            >Try Jev</a
+          >
+          <a class="btn ghost" href="#how">See how it works</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="how">
+      <div class="band-inner">
+        <h2>Messy state in. Typed answers out.</h2>
+        <p class="band-lede">
+          Hand Jev the context your software already has—a ticket, log line, or
+          tool result—plus the questions you need answered. One round trip
+          returns structured values your code can branch on. No prose to parse.
+          No invented labels.
+        </p>
+        <div class="flow" role="list">
+          <div class="flow-step" role="listitem">
+            <span class="flow-k">01</span>
+            <p class="flow-t">State</p>
+            <p class="flow-d">Any messy text or JSON your agent already holds.</p>
+          </div>
+          <div class="flow-step" role="listitem">
+            <span class="flow-k">02</span>
+            <p class="flow-t">Jev</p>
+            <p class="flow-d">System One evaluates every question in one call.</p>
+          </div>
+          <div class="flow-step" role="listitem">
+            <span class="flow-k">03</span>
+            <p class="flow-t">Typed out</p>
+            <p class="flow-d">choice · score · noul — with calibrated confidence.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-alt" id="primitives">
+      <div class="band-inner">
+        <h2>Three primitives. Most of the agent loop.</h2>
+        <p class="band-lede">
+          Route models, gate risky tools, triage tickets, score risk—without
+          spending a frontier LLM call on every tiny judgment.
+        </p>
+        <ul class="prim-list">
+          <li>
+            <h3>choice</h3>
+            <p>
+              Pick one of up to 255 labelled options. Returns the winning key,
+              per-option probabilities, and confidence.
+            </p>
+          </li>
+          <li>
+            <h3>score</h3>
+            <p>
+              Place input on a 2–10 level spectrum. Get a fractional score plus
+              the full distribution—ready to threshold.
+            </p>
+          </li>
+          <li>
+            <h3>noul</h3>
+            <p>
+              A calibrated yes/no as a probability from 0 to 1. Ideal for
+              guardrails, filters, and auto-approve / escalate gates.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band band-cta" id="cta">
+      <div class="band-inner narrow">
+        <h2>Intelligence that stays inside your software.</h2>
+        <p class="band-lede">
+          Up to 200× faster and far cheaper than an LLM on classification.
+          Zero hallucinations by construction—outputs are locked to your schema.
+        </p>
+        <div class="hero-actions">
+          <a
+            class="btn primary"
+            href="https://www.jevtypesafeai.com/"
+            rel="noopener"
+            target="_blank"
+            >Open playground</a
+          >
+          <a class="btn ghost" href="/">Guard control plane</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-foot">
+      <p>
+        <span class="foot-brand">Jev</span> by TypeSafe AI · Hero photo
+        <a
+          href="https://unsplash.com/photos/6427a16b0a28"
+          rel="noopener"
+          target="_blank"
+          >Unsplash</a
+        >
+        ·
+        <a href="/fleet.html">Fleet</a>
+      </p>
+    </footer>
+
+    <script src="/landing.js" defer></script>
+  </body>
+</html>

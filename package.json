@@ -1,0 +1,28 @@
+{
+  "name": "jev-zk-guard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "guard": "tsx src/sort.ts",
+    "agent": "tsx src/agent/demo.ts",
+    "serve": "tsx src/server.ts",
+    "fleet": "node scripts/fleet-chat.mjs",
+    "smoke:escalate": "node scripts/smoke-escalate.mjs",
+    "smoke:fleet": "node scripts/smoke-fleet.mjs",
+    "smoke:fleet-build": "JEV_STUB=1 FLEET_EXECUTOR=noop tsx scripts/smoke-fleet-build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
