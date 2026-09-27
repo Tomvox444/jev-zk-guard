@@ -8,13 +8,9 @@ export type ProposedCommand = {
 
 /** Probabilistic judgments from Jev (System One). */
 export type JevJudgment = {
-  /** Destructive / irreversible ops (rm -rf, drop db, …). */
   dangerous: number;
-  /** Looks like exfil / credential theft. */
   exfil: number;
-  /** Outside the agent's stated task. */
   offPolicy: number;
-  /** Benign local read / list / build. */
   benign: number;
   model: string;
   raw?: unknown;
@@ -33,7 +29,27 @@ export type PolicyResult = {
   };
 };
 
-/** Tamper-evident audit seal (hash chain + Ed25519) — not a ZK proof. */
+export type ZkLevel = "L1" | "L2" | "L3";
+
+/** Real Groth16 zk-SNARK over policy compliance (scores stay private). */
+export type ZkScheme = "groth16-policy";
+
+export type ZkProof = {
+  level: ZkLevel;
+  scheme: ZkScheme;
+  commitment: string;
+  publicInputs: {
+    commandHash: string;
+    decision: PolicyDecision;
+    thresholds: PolicyResult["thresholds"];
+    level: ZkLevel;
+  };
+  /** Ship this blob to a third party — verifier needs only proof + publicSignals + VK. */
+  proof: unknown;
+  verified: boolean;
+};
+
+/** Tamper-evident audit append (hash chain + Ed25519) — separate from ZK. */
 export type AuditSeal = {
   scheme: "ed25519-hash-chain";
   seq: number;
@@ -54,11 +70,11 @@ export type GuardVerdict = {
   command: ProposedCommand;
   judgment: JevJudgment;
   policy: PolicyResult;
+  zk: ZkProof;
   seal: AuditSeal;
   sim: SimResult;
 };
 
-/** Agent tool proposal (before guard). */
 export type ToolCall = {
   name: string;
   args: Record<string, unknown>;
@@ -71,7 +87,6 @@ export type ToolDef = {
   run: (args: Record<string, unknown>) => Promise<string>;
 };
 
-/** Result after wrapTool + guard gate. */
 export type ToolResult = {
   ok: boolean;
   output: string;

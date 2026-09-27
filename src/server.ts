@@ -17,6 +17,8 @@ import {
 import { loadRegistry, reloadRegistry } from "./auth/registry.js";
 import { appendSealedAudit, readAudit, verifyChain } from "./audit/seal.js";
 import { getAuditPublicKeyPem } from "./audit/keys.js";
+import { verifyPolicyCompliance } from "./zk/verify.js";
+import type { Groth16ProofJson } from "./zk/prove.js";
 import { hasClearance, requiredClearance } from "./escalation/clearance.js";
 import {
   createEscalation,
@@ -301,7 +303,7 @@ const server = createServer(async (req, res) => {
         const clearanceOk = hasClearance(identity.clearance, required);
         let allowed =
           verdict.policy.decision === "allow" &&
-          verdict.seal.verified &&
+          verdict.zk.verified &&
           clearanceOk;
 
         let escalation:
@@ -374,7 +376,17 @@ const server = createServer(async (req, res) => {
         json(res, 200, {
           allowed,
           decision: verdict.policy.decision,
+          zk_level: verdict.zk.level,
           requiredClearance: required,
+          zk: {
+            scheme: verdict.zk.scheme,
+            level: verdict.zk.level,
+            verified: verdict.zk.verified,
+            commitment: verdict.zk.commitment,
+            publicInputs: verdict.zk.publicInputs,
+            /** Third parties: POST /v1/zk/verify with proof.groth16 + proof.publicSignals */
+            proof: verdict.zk.proof,
+          },
           seal: {
             scheme: seal.scheme,
             seq: seal.seq,
@@ -549,6 +561,12 @@ const server = createServer(async (req, res) => {
               verified: s.result.verdict.seal.verified,
               entryHash: s.result.verdict.seal.entryHash,
             },
+            zk: {
+              level: s.result.verdict.zk.level,
+              scheme: s.result.verdict.zk.scheme,
+              verified: s.result.verdict.zk.verified,
+              commitment: s.result.verdict.zk.commitment,
+            },
             judgment: s.result.verdict.judgment,
             reasons: s.result.verdict.policy.reasons,
           })),
@@ -585,6 +603,43 @@ const server = createServer(async (req, res) => {
         return;
       }
 
+      /**
+       * Third-party Groth16 verify — body must NOT include Jev scores.
+       * Only { proof, publicSignals } from a prior /v1/guard response.
+       */
+      if (method === "POST" && path === "/v1/zk/verify") {
+        const raw = await readBody(req);
+        const body = raw ? JSON.parse(raw) : {};
+        // Accept either flat { proof, publicSignals } or nested guard blob { proof: { groth16, publicSignals } }
+        const nested = body.proof && typeof body.proof === "object" ? body.proof : null;
+        const proof = body.groth16 ?? nested?.groth16 ?? (nested?.pi_a ? nested : body.proof);
+        const publicSignals = body.publicSignals ?? nested?.publicSignals;
+        if (!proof || !Array.isArray(publicSignals)) {
+          json(res, 400, {
+            error: "proof_and_publicSignals_required",
+            message:
+              "Pass { proof, publicSignals } only — never the private Jev scores.",
+          });
+          return;
+        }
+        try {
+          const ok = await verifyPolicyCompliance(
+            proof as Groth16ProofJson,
+            publicSignals.map(String),
+          );
+          json(res, 200, {
+            verified: ok,
+            scheme: "groth16-policy",
+            publicSignals,
+            note: "Verified with VK only; witness scores were not provided.",
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          json(res, 400, { error: "verify_failed", message });
+        }
+        return;
+      }
+
       json(res, 404, { error: "not_found", path });
       return;
     }
@@ -608,12 +663,14 @@ server.listen(PORT, HOST, () => {
   console.log(`  decide      POST /v1/escalations/:id/decide`);
   console.log(`  audit       GET  /v1/audit`);
   console.log(`  audit verify GET  /v1/audit/verify`);
+  console.log(`  zk verify   POST /v1/zk/verify`);
   console.log(`  fleet      POST /v1/fleet/chat`);
   console.log(`  plan       POST /v1/fleet/plan`);
   console.log(`  build      POST /v1/fleet/build`);
   console.log(`  jobs       GET  /v1/fleet/jobs/:id`);
   console.log(`  fleet UI   GET  /fleet.html`);
   console.log(`  jev         ${mode}`);
+  console.log(`  zk          groth16-policy`);
   console.log(`  audit seal  ed25519-hash-chain`);
   console.log(
     `  auth        shared-secret${isUsingDemoSecret() ? ` (demo: ${DEMO_API_SECRET})` : " (GUARD_API_SECRET)"}`,

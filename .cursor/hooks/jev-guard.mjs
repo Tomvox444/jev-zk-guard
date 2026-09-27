@@ -97,8 +97,6 @@ try {
   process.exit(0);
 } catch (err) {
   const msg = err instanceof Error ? err.message : String(err);
-  // Fail open if control plane is down so local bootstrap still works.
-  // Set JEV_GUARD_STRICT=1 to deny when unreachable.
   if (process.env.JEV_GUARD_STRICT === "1") {
     out({
       permission: "deny",

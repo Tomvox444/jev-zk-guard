@@ -1,12 +1,10 @@
 # Jev-ZK Guard
 
-Control plane for **AI agent fleets**: every proposed action is scored by **Jev**, gated by **policy**, written to a **tamper-evident audit chain** (hash + Ed25519), then allowed, held, or escalated by agent clearance.
+Control plane for **AI agent fleets**: every proposed action is scored by **Jev**, gated by **policy**, attested with a **real Groth16 zk-SNARK** (scores stay private), written to a **tamper-evident audit chain**, then allowed / held / escalated by clearance.
 
-> Agent proposes → Jev scores → Policy decides → Audit seal → escalate if clearance is too low.
+> Agent proposes → Jev scores → Policy decides → **Groth16 prove** → **Groth16 verify (no witness)** → Audit seal → clearance
 
 Built for local Cursor: IDE shells hit the same `/v1/guard` API as the fleet builder.
-
-**Product name** keeps “ZK” for history / roadmap; the live attestation today is an **audit hash chain**, not a zero-knowledge proof.
 
 ## Demo URLs (after `npm run serve`)
 
@@ -29,7 +27,7 @@ Open the Guard UI, switch **Junior L1** / **Lead L3**, propose a safe command (`
 ### Live Jev vs stub
 
 - With `OPENROUTER_API_KEY` (or a jevctl keychain entry) and `JEV_STUB` unset: health shows `"jev":"openrouter"`.
-- If OpenRouter is unreachable or `JEV_STUB=1`: offline regex stub scores — **same policy / audit seal / clearance pipeline**.
+- If OpenRouter is unreachable or `JEV_STUB=1`: offline regex stub scores — **same policy / Groth16 / audit / clearance pipeline**.
 
 Check: `curl -s http://127.0.0.1:8787/health` → prefer `"jev":"openrouter"`, `"stubForced":false`.
 
@@ -106,14 +104,19 @@ Point the UI / hooks at your tenant + agent via `x-tenant-id` / `x-agent-id` (or
 
 ## How security works
 
-1. **Jev** — scores `dangerous`, `exfil`, `offPolicy`, `benign`
-2. **Policy** — thresholds → `allow` / `review` / `deny`
-3. **Audit seal** — each decision is appended to a per-tenant JSONL **hash chain** and **Ed25519-signed** (`entryHash = SHA256(prevHash ‖ canonical(payload))`). Commands stay in cleartext on purpose — this is an operator audit log, not ZK.
-4. **Clearance** — Hands need L1 for allow; review needs L2+; deny needs L3 or Lead decides an escalation ticket. (L1/L2/L3 here are **roles**, not proof hardness.)
+1. **Jev** — scores `dangerous`, `exfil`, `offPolicy`, `benign` (**private witness**)
+2. **Policy** — thresholds → `allow` / `review` / `deny` (**public**)
+3. **Groth16 zk-SNARK** ([`circuits/policy.circom`](circuits/policy.circom)):
+   - **Prover** ([`src/zk/prove.ts`](src/zk/prove.ts)) knows the scores and emits `{ proof, publicSignals }`
+   - **Verifier** ([`src/zk/verify.ts`](src/zk/verify.ts)) checks with the **verification key only** — it never receives the scores
+   - Third party: `POST /v1/zk/verify` with `{ proof, publicSignals }` from a guard response
+   - L1/L2/L3 labels = decision severity (allow/review/deny); **same circuit**
+4. **Audit seal** — hash-chained Ed25519 JSONL for operator forensics (commands in clear on purpose)
+5. **Clearance** — agent roles L1/L2/L3 for allow / review / deny escalation
 
-Verify the chain: `GET /v1/audit/verify` (clearance L2+) — returns `ok`, tip hash, and the audit public key PEM.
+Setup (once): put `circom` in `bin/circom`, then `npm run zk:setup`. Artifacts live under `circuits/build/` (`policy.wasm`, `policy_final.zkey`, `verification_key.json`).
 
-Pipeline: [`src/pipeline.ts`](src/pipeline.ts) · seal: [`src/audit/seal.ts`](src/audit/seal.ts) · keys: [`src/audit/keys.ts`](src/audit/keys.ts).
+Smoke: `npm run smoke:zk` — proves with witness, verifies **without** witness, rejects tampered public signals.
 
 ## Fleet orchestration (modular layout)
 
@@ -121,6 +124,8 @@ Pipeline: [`src/pipeline.ts`](src/pipeline.ts) · seal: [`src/audit/seal.ts`](sr
 |------|----------------|
 | `src/jev/` | Live Jev (OpenRouter) + stub + complexity routing |
 | `src/policy.ts` | Deterministic gates |
+| `src/zk/` | Groth16 prove / verify (separated) |
+| `circuits/` | Circom policy circuit + build artifacts |
 | `src/audit/` | Hash-chained Ed25519 audit log |
 | `src/escalation/` | Tickets + clearance |
 | `src/fleet/lead-plan.ts` | Lead briefs (objective, doNot, acceptance…) |
@@ -153,6 +158,8 @@ See [`.env.example`](.env.example). Important vars:
 ```bash
 npm run serve              # control plane
 npm run typecheck
+npm run zk:setup           # compile circom + Groth16 keys (needs bin/circom)
+npm run smoke:zk           # prove with witness / verify without
 npm run smoke:fleet        # fleet chat API smoke
 npm run smoke:fleet-build  # stub Jev + noop executor build smoke
 npm run smoke:escalate     # escalation ticket flow
@@ -161,7 +168,9 @@ npm run fleet -- "goal"    # CLI orchestrate
 
 ## Honest scope
 
-- **Not ZK:** we do not hide secrets or convince a third party with a SNARK. Attestation = **tamper-evident audit** (hash chain + Ed25519) verifiable with the public key.
+- **Real ZK:** Groth16 over policy compliance — private Jev scores, public thresholds/decision/cmdHash. Prover and verifier are **separate modules**; `POST /v1/zk/verify` does not take the witness.
+- Trusted setup is a **local demo ceremony** (`npm run zk:setup`), not a multi-party production MPC.
+- Audit chain is complementary forensics (not ZK).
 - Fleet quality tracks **Lead briefs + executor**, not magic multi-model routing.
 - Guard `sim` never executes real shells; Cursor hooks deny/allow the IDE command separately after the verdict.
 

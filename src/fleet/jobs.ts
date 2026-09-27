@@ -282,7 +282,7 @@ export async function startBuildJob(opts: {
     );
     // Demo safety: hard-stop only on deny. "review" logs and continues (escalate path).
     const denied =
-      verdict.policy.decision === "deny" || !verdict.seal.verified;
+      verdict.policy.decision === "deny" || !verdict.zk.verified;
     const decision = verdict.policy.decision;
     touch(job, {
       log: [

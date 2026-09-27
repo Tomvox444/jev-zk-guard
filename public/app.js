@@ -73,15 +73,17 @@ function renderVerdict(data) {
   const v = data.verdict;
   const j = v.judgment;
   const esc = data.escalation;
+  const zk = data.zk || v.zk;
   const seal = data.seal || v.seal;
   guardOut.hidden = false;
   guardOut.innerHTML = `
     <div class="verdict-top">
       <span class="pill ${data.decision}">${data.decision}</span>
+      <span class="pill ${zk?.level || "L1"}">${zk?.level || "?"} · ${zk?.scheme || "zk"}</span>
+      <span class="pill ${zk?.verified ? "allow" : "deny"}">zk ${zk?.verified ? "ok" : "bad"}</span>
       <span class="pill ${data.allowed ? "allow" : "deny"}">${data.allowed ? "allowed" : "blocked"}</span>
       <span class="pill L1">${data.agent?.id} · ${data.agent?.clearance ?? "?"}</span>
       <span class="pill L2">need ${data.requiredClearance}</span>
-      <span class="pill ${seal?.verified ? "allow" : "deny"}">seal ${seal?.verified ? "ok" : "bad"}</span>
     </div>
     ${
       esc
@@ -94,14 +96,14 @@ function renderVerdict(data) {
       <div class="score"><span>offPolicy</span><strong>${j.offPolicy.toFixed(2)}</strong></div>
       <div class="score"><span>benign</span><strong>${j.benign.toFixed(2)}</strong></div>
     </div>
-    <div class="mono">seq=${seal?.seq ?? "?"} entryHash=${(seal?.entryHash || "").slice(0, 24)}…</div>
+    <div class="mono">groth16 commitment=${(zk?.commitment || "").slice(0, 20)}… · audit seq=${seal?.seq ?? "?"}</div>
   `;
 }
 
 async function runGuard() {
   const btn = document.getElementById("btn-guard");
   btn.disabled = true;
-  await animatePipeline(["agent", "jev", "policy", "audit", "sim"]);
+  await animatePipeline(["agent", "jev", "policy", "zk", "audit", "sim"]);
   try {
     const res = await fetch("/v1/guard", {
       method: "POST",

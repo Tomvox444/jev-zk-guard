@@ -5,3 +5,9 @@ data/
 data/fleet/workspaces/
 .env
 *.log
+bin/circom
+circuits/build/*.ptau
+circuits/build/*.r1cs
+circuits/build/*.sym
+circuits/build/policy_0000.zkey
+circuits/build/pot*

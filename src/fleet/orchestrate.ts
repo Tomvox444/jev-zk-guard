@@ -168,7 +168,7 @@ export async function orchestrateFleet(opts: {
         { policyProfile: assignee.policyProfile },
       );
       const allowed =
-        verdict.policy.decision === "allow" && verdict.seal.verified;
+        verdict.policy.decision === "allow" && verdict.zk.verified;
       steps.push({
         id: randomUUID(),
         phase: "execute",

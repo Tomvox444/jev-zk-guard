@@ -9,6 +9,8 @@
     "agent": "tsx src/agent/demo.ts",
     "serve": "tsx src/server.ts",
     "fleet": "node scripts/fleet-chat.mjs",
+    "zk:setup": "node scripts/zk-setup.mjs",
+    "smoke:zk": "tsx scripts/smoke-zk.mjs",
     "smoke:escalate": "node scripts/smoke-escalate.mjs",
     "smoke:fleet": "node scripts/smoke-fleet.mjs",
     "smoke:fleet-build": "JEV_STUB=1 FLEET_EXECUTOR=noop tsx scripts/smoke-fleet-build.mjs",
@@ -18,7 +20,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@typesafe-ai/sdk": "^0.6.0"
+    "@typesafe-ai/sdk": "^0.6.0",
+    "circomlib": "^2.0.5",
+    "snarkjs": "^0.7.6"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

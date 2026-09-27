@@ -3,6 +3,7 @@ import { evaluatePolicy } from "./policy.js";
 import { simulateExecution } from "./sim.js";
 import type { AuditSeal, GuardVerdict, ProposedCommand } from "./types.js";
 import type { PolicyProfileName } from "./auth/registry.js";
+import { attestWithZk } from "./zk.js";
 import { GENESIS_HASH, computeEntryHash } from "./audit/seal.js";
 import { signEntryHash, verifyEntryHash } from "./audit/keys.js";
 
@@ -46,8 +47,8 @@ function ephemeralSeal(
 }
 
 /**
- * Agent proposes → Jev analyzes → Policy → Audit seal → Simulated execution.
- * HTTP handlers should call `appendSealedAudit` after clearance with the final `allowed`.
+ * Agent → Jev → Policy → Groth16 ZK (prove then verify separately) → ephemeral seal → sim.
+ * HTTP layer appends the durable audit chain after clearance.
  */
 export async function guard(
   cmd: ProposedCommand,
@@ -55,7 +56,8 @@ export async function guard(
 ): Promise<GuardVerdict> {
   const judgment = await analyzeWithJev(cmd);
   const policy = evaluatePolicy(judgment, opts.policyProfile ?? "default");
+  const zk = await attestWithZk(cmd, judgment, policy);
   const seal = ephemeralSeal(cmd, judgment, policy);
-  const sim = simulateExecution(cmd, policy, seal.verified);
-  return { command: cmd, judgment, policy, seal, sim };
+  const sim = simulateExecution(cmd, policy, zk.verified && seal.verified);
+  return { command: cmd, judgment, policy, zk, seal, sim };
 }

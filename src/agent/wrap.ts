@@ -24,7 +24,7 @@ export type InvokeOptions = {
 };
 
 /**
- * Wrap a tool so every invocation must pass guard (Jev → Policy → audit seal)
+ * Wrap a tool so every invocation must pass guard (Jev → Policy → Groth16 ZK)
  * before the handler runs. Handlers stay simulation-only in the demo.
  */
 export function wrapTool(tool: ToolDef) {
@@ -55,12 +55,12 @@ export function wrapTool(tool: ToolDef) {
       );
 
       const allowed =
-        verdict.policy.decision === "allow" && verdict.seal.verified;
+        verdict.policy.decision === "allow" && verdict.zk.verified;
 
       if (!allowed) {
         const reason =
           verdict.sim.note ||
-          `blocked: policy=${verdict.policy.decision} seal=${verdict.seal.scheme}`;
+          `blocked: policy=${verdict.policy.decision} zk=${verdict.zk.scheme}/${verdict.zk.level}`;
         return { ok: false, output: reason, verdict };
       }
 
