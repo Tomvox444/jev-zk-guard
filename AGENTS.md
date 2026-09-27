@@ -1,5 +1,7 @@
 # Jev-ZK Guard — local Cursor
 
+Attestation is a **hash-chained Ed25519 audit log** (`src/audit/`), not a ZK SNARK. Clearance L1–L3 remains agent roles.
+
 ## Start control plane
 
 ```bash

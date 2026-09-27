@@ -41,11 +41,11 @@ console.log(
         ok: s.result.ok,
         output: s.result.output,
         policy: s.result.verdict.policy.decision,
-        zk: {
-          level: s.result.verdict.zk.level,
-          scheme: s.result.verdict.zk.scheme,
-          verified: s.result.verdict.zk.verified,
-          commitment: s.result.verdict.zk.commitment,
+        seal: {
+          scheme: s.result.verdict.seal.scheme,
+          seq: s.result.verdict.seal.seq,
+          verified: s.result.verdict.seal.verified,
+          entryHash: s.result.verdict.seal.entryHash,
         },
         judgment: s.result.verdict.judgment,
       })),

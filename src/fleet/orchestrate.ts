@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { scoreComplexity, type ComplexityScore } from "../jev/complexity.js";
 import { listFleetAgents, type FleetAgent, type FleetRole } from "../auth/registry.js";
 import { guard } from "../pipeline.js";
-import { appendAudit } from "../audit/log.js";
+import { appendSealedAudit } from "../audit/seal.js";
 import {
   briefToMarkdown,
   leadFinalizeBrief,
@@ -168,7 +168,7 @@ export async function orchestrateFleet(opts: {
         { policyProfile: assignee.policyProfile },
       );
       const allowed =
-        verdict.policy.decision === "allow" && verdict.zk.verified;
+        verdict.policy.decision === "allow" && verdict.seal.verified;
       steps.push({
         id: randomUUID(),
         phase: "execute",
@@ -245,13 +245,11 @@ export async function orchestrateFleet(opts: {
   };
   runs.set(runId, run);
 
-  await appendAudit(opts.tenantId, {
+  await appendSealedAudit({
     tenantId: opts.tenantId,
     agentId: opts.consoleAgentId,
     command: `fleet:${opts.goal.slice(0, 120)}`,
     decision: final.approved ? "allow" : "deny",
-    zk_level: "L1",
-    commitment: runId.replace(/-/g, "").slice(0, 64).padEnd(64, "0"),
     allowed: final.approved,
     judgment: {
       dangerous: 0,
@@ -259,6 +257,12 @@ export async function orchestrateFleet(opts: {
       offPolicy: 0,
       benign: 1,
       model: "fleet-orchestrator",
+    },
+    thresholds: {
+      dangerousMax: 0.7,
+      exfilMax: 0.5,
+      offPolicyMax: 0.6,
+      benignMin: 0.4,
     },
     event: "fleet_run",
     meta: {

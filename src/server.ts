@@ -1,3 +1,4 @@
+import "./load-env.js";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -14,7 +15,8 @@ import {
   resolveApiSecret,
 } from "./auth/middleware.js";
 import { loadRegistry, reloadRegistry } from "./auth/registry.js";
-import { appendAudit, readAudit } from "./audit/log.js";
+import { appendSealedAudit, readAudit, verifyChain } from "./audit/seal.js";
+import { getAuditPublicKeyPem } from "./audit/keys.js";
 import { hasClearance, requiredClearance } from "./escalation/clearance.js";
 import {
   createEscalation,
@@ -299,7 +301,7 @@ const server = createServer(async (req, res) => {
         const clearanceOk = hasClearance(identity.clearance, required);
         let allowed =
           verdict.policy.decision === "allow" &&
-          verdict.zk.verified &&
+          verdict.seal.verified &&
           clearanceOk;
 
         let escalation:
@@ -312,6 +314,36 @@ const server = createServer(async (req, res) => {
           | undefined;
 
         if (verdict.policy.decision !== "allow" && !clearanceOk) {
+          allowed = false;
+        }
+
+        const { record: audit, seal } = await appendSealedAudit({
+          tenantId: identity.tenantId,
+          agentId: identity.agentId,
+          requestId,
+          command,
+          decision: verdict.policy.decision,
+          allowed,
+          judgment: {
+            dangerous: verdict.judgment.dangerous,
+            exfil: verdict.judgment.exfil,
+            offPolicy: verdict.judgment.offPolicy,
+            benign: verdict.judgment.benign,
+            model: verdict.judgment.model,
+          },
+          thresholds: verdict.policy.thresholds,
+          event:
+            verdict.policy.decision !== "allow" && !clearanceOk
+              ? "guard_escalated"
+              : "guard",
+          meta: {
+            clearance: identity.clearance,
+            requiredClearance: required,
+          },
+        });
+        verdict.seal = seal;
+
+        if (verdict.policy.decision !== "allow" && !clearanceOk) {
           const ticket = await createEscalation({
             tenantId: identity.tenantId,
             juniorAgentId: identity.agentId,
@@ -319,8 +351,7 @@ const server = createServer(async (req, res) => {
             command,
             rationale: body.rationale ? String(body.rationale) : undefined,
             decision: verdict.policy.decision,
-            zk_level: verdict.zk.level,
-            commitment: verdict.zk.commitment,
+            entryHash: seal.entryHash,
             requiredClearance: required,
             juniorClearance: identity.clearance,
             judgment: {
@@ -340,35 +371,18 @@ const server = createServer(async (req, res) => {
           allowed = false;
         }
 
-        const audit = await appendAudit(identity.tenantId, {
-          requestId,
-          tenantId: identity.tenantId,
-          agentId: identity.agentId,
-          command,
-          decision: verdict.policy.decision,
-          zk_level: verdict.zk.level,
-          commitment: verdict.zk.commitment,
-          allowed,
-          judgment: {
-            dangerous: verdict.judgment.dangerous,
-            exfil: verdict.judgment.exfil,
-            offPolicy: verdict.judgment.offPolicy,
-            benign: verdict.judgment.benign,
-            model: verdict.judgment.model,
-          },
-          event: escalation ? "guard_escalated" : "guard",
-          meta: {
-            clearance: identity.clearance,
-            requiredClearance: required,
-            ticketId: escalation?.ticketId,
-          },
-        });
-
         json(res, 200, {
           allowed,
           decision: verdict.policy.decision,
-          zk_level: verdict.zk.level,
           requiredClearance: required,
+          seal: {
+            scheme: seal.scheme,
+            seq: seal.seq,
+            entryHash: seal.entryHash,
+            prevHash: seal.prevHash,
+            keyId: seal.keyId,
+            verified: seal.verified,
+          },
           tenant: {
             id: identity.tenantId,
             name: identity.tenantName,
@@ -443,15 +457,19 @@ const server = createServer(async (req, res) => {
           return;
         }
         const t = result.ticket;
-        await appendAudit(identity.tenantId, {
+        await appendSealedAudit({
           tenantId: identity.tenantId,
           agentId: identity.agentId,
           command: t.command,
           decision: t.decision,
-          zk_level: t.zk_level,
-          commitment: t.commitment,
           allowed: decision === "approve",
           judgment: t.judgment,
+          thresholds: {
+            dangerousMax: 0.7,
+            exfilMax: 0.5,
+            offPolicyMax: 0.6,
+            benignMin: 0.4,
+          },
           event:
             decision === "approve" ? "escalation_approved" : "escalation_denied",
           meta: {
@@ -460,6 +478,7 @@ const server = createServer(async (req, res) => {
             note: t.note,
             signature: t.signature,
             overrideBy: identity.agentId,
+            priorEntryHash: t.entryHash,
           },
         });
         json(res, 200, {
@@ -488,13 +507,11 @@ const server = createServer(async (req, res) => {
         });
 
         for (const s of run.steps) {
-          await appendAudit(identity.tenantId, {
+          await appendSealedAudit({
             tenantId: identity.tenantId,
             agentId: identity.agentId,
             command: `${s.call.name} ${JSON.stringify(s.call.args)}`,
             decision: s.result.verdict.policy.decision,
-            zk_level: s.result.verdict.zk.level,
-            commitment: s.result.verdict.zk.commitment,
             allowed: s.result.ok,
             judgment: {
               dangerous: s.result.verdict.judgment.dangerous,
@@ -503,6 +520,8 @@ const server = createServer(async (req, res) => {
               benign: s.result.verdict.judgment.benign,
               model: s.result.verdict.judgment.model,
             },
+            thresholds: s.result.verdict.policy.thresholds,
+            event: "agent_step",
           });
         }
 
@@ -524,11 +543,11 @@ const server = createServer(async (req, res) => {
             ok: s.result.ok,
             output: s.result.output,
             policy: s.result.verdict.policy.decision,
-            zk: {
-              level: s.result.verdict.zk.level,
-              scheme: s.result.verdict.zk.scheme,
-              verified: s.result.verdict.zk.verified,
-              commitment: s.result.verdict.zk.commitment,
+            seal: {
+              scheme: s.result.verdict.seal.scheme,
+              seq: s.result.verdict.seal.seq,
+              verified: s.result.verdict.seal.verified,
+              entryHash: s.result.verdict.seal.entryHash,
             },
             judgment: s.result.verdict.judgment,
             reasons: s.result.verdict.policy.reasons,
@@ -545,6 +564,23 @@ const server = createServer(async (req, res) => {
           agent: identity.agentId,
           count: entries.length,
           entries,
+        });
+        return;
+      }
+
+      if (method === "GET" && path === "/v1/audit/verify") {
+        if (!hasClearance(identity.clearance, "L2")) {
+          json(res, 403, {
+            error: "forbidden",
+            message: "audit verify requires clearance L2+",
+          });
+          return;
+        }
+        const chain = await verifyChain(identity.tenantId);
+        json(res, 200, {
+          tenant: identity.tenantId,
+          ...chain,
+          publicKeyPem: getAuditPublicKeyPem(),
         });
         return;
       }
@@ -570,12 +606,15 @@ server.listen(PORT, HOST, () => {
   console.log(`  guard       POST /v1/guard`);
   console.log(`  escalations GET  /v1/escalations`);
   console.log(`  decide      POST /v1/escalations/:id/decide`);
+  console.log(`  audit       GET  /v1/audit`);
+  console.log(`  audit verify GET  /v1/audit/verify`);
   console.log(`  fleet      POST /v1/fleet/chat`);
   console.log(`  plan       POST /v1/fleet/plan`);
   console.log(`  build      POST /v1/fleet/build`);
   console.log(`  jobs       GET  /v1/fleet/jobs/:id`);
   console.log(`  fleet UI   GET  /fleet.html`);
   console.log(`  jev         ${mode}`);
+  console.log(`  audit seal  ed25519-hash-chain`);
   console.log(
     `  auth        shared-secret${isUsingDemoSecret() ? ` (demo: ${DEMO_API_SECRET})` : " (GUARD_API_SECRET)"}`,
   );

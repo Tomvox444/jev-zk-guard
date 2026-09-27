@@ -1,10 +1,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ZkLevel } from "../types.js";
-
 export type PolicyProfileName = "default" | "strict";
-export type ClearanceLevel = ZkLevel;
+/** Agent role clearance (not a crypto proof level). */
+export type ClearanceLevel = "L1" | "L2" | "L3";
 export type FleetRole = "hands" | "reviewer" | "lead";
 
 export type AgentRecord = {

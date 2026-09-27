@@ -18,7 +18,7 @@ const junior = await guard("cursor-junior", "cat ~/.ssh/id_rsa");
 console.log("junior dangerous", {
   allowed: junior.body.allowed,
   decision: junior.body.decision,
-  zk: junior.body.zk_level,
+  seal: junior.body.seal?.entryHash?.slice(0, 12),
   required: junior.body.requiredClearance,
   ticket: junior.body.escalation?.ticketId,
   clearance: junior.body.agent?.clearance,

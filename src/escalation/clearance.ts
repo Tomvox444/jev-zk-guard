@@ -1,4 +1,4 @@
-import type { PolicyDecision, ZkLevel } from "../types.js";
+import type { PolicyDecision } from "../types.js";
 import type { ClearanceLevel } from "../auth/registry.js";
 
 const RANK: Record<ClearanceLevel, number> = { L1: 1, L2: 2, L3: 3 };
@@ -19,8 +19,4 @@ export function requiredClearance(decision: PolicyDecision): ClearanceLevel {
   if (decision === "deny") return "L3";
   if (decision === "review") return "L2";
   return "L1";
-}
-
-export function asZkLevel(c: ClearanceLevel): ZkLevel {
-  return c;
 }

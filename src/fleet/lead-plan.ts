@@ -233,15 +233,15 @@ function landingPlan(goal: string, c: GoalConstraints): PlannedTask[] {
       kind: "implement",
       brief: {
         objective:
-          "Add How-it-works (propose → Jev scores → policy + ZK attest) and exactly three use cases.",
+          "Add How-it-works (propose → Jev scores → policy + sealed audit) and exactly three use cases.",
         deliverables: [
-          "How-it-works section with three steps: Propose; Jev scores; Policy + ZK attest",
+          "How-it-works section with three steps: Propose; Jev scores; Policy + sealed audit",
           `Use-cases section with exactly: ${uses.join("; ")}`,
         ],
         constraints: [
           ...shared,
           "Reuse existing section styles / tokens; keep one visual language",
-          "Copy must match the product (agent propose → score → attest), not generic SaaS steps",
+          "Copy must match the product (agent propose → score → sealed audit), not generic SaaS steps",
         ],
         doNot: [
           "Do not redesign the hero or change CSS variables / brand type",
@@ -249,7 +249,7 @@ function landingPlan(goal: string, c: GoalConstraints): PlannedTask[] {
           "Do not add fake logos or metrics",
         ],
         acceptance: [
-          "Three how-it-works steps match propose → Jev → policy+ZK",
+          "Three how-it-works steps match propose → Jev → policy+audit",
           "Exactly three named use cases as specified",
           "Hero and story sections still intact",
         ],

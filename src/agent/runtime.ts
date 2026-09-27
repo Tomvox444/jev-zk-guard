@@ -53,7 +53,7 @@ export function formatAgentRun(run: AgentRun): string {
       `step ${i + 1}: ${step.call.name} ${JSON.stringify(step.call.args)}`,
     );
     lines.push(
-      `  policy=${v.policy.decision} zk=${v.zk.level}/${v.zk.scheme} verified=${v.zk.verified} ok=${step.result.ok}`,
+      `  policy=${v.policy.decision} seal=${v.seal.scheme} seq=${v.seal.seq} verified=${v.seal.verified} ok=${step.result.ok}`,
     );
     lines.push(`  output: ${step.result.output.split("\n")[0]}`);
     lines.push("");

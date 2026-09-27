@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ClearanceLevel } from "../auth/registry.js";
-import type { PolicyDecision, ZkLevel } from "../types.js";
+import type { PolicyDecision } from "../types.js";
 import { resolveApiSecret } from "../auth/middleware.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,8 +21,8 @@ export type EscalationTicket = {
   command: string;
   rationale?: string;
   decision: PolicyDecision;
-  zk_level: ZkLevel;
-  commitment: string;
+  /** Hash of the sealed audit entry that recorded this escalated guard call. */
+  entryHash: string;
   requiredClearance: ClearanceLevel;
   juniorClearance: ClearanceLevel;
   judgment: {

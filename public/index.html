@@ -44,7 +44,7 @@
           <span class="arrow">→</span>
           <div class="stage" data-stage="policy">Policy</div>
           <span class="arrow">→</span>
-          <div class="stage" data-stage="zk">ZK</div>
+          <div class="stage" data-stage="audit">Audit</div>
           <span class="arrow">→</span>
           <div class="stage" data-stage="sim">Escalate</div>
         </div>
@@ -106,7 +106,9 @@
           <p class="hint">GET /v1/escalations · POST …/decide (needs L3)</p>
           <div class="actions">
             <button type="button" id="btn-inbox" class="primary">Refresh inbox</button>
+            <button type="button" id="btn-verify" class="ghost">Verify audit chain</button>
           </div>
+          <div class="mono" id="chain-out" hidden style="margin-top:0.75rem"></div>
           <ol class="steps" id="escalation-steps"></ol>
         </article>
       </section>
@@ -126,7 +128,7 @@ curl -s "$JEV_GUARD_URL/v1/guard" \
     </main>
 
     <footer>
-      <span>Clearance · Escalation · ZK · Cursor hooks</span>
+      <span>Clearance · Escalation · Audit chain · Cursor hooks</span>
       <span id="footer-mode"></span>
     </footer>
     <script src="/app.js" type="module"></script>

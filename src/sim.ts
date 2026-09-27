@@ -4,10 +4,10 @@ import type { PolicyResult, ProposedCommand, SimResult } from "./types.js";
 export function simulateExecution(
   cmd: ProposedCommand,
   policy: PolicyResult,
-  zkOk: boolean,
+  sealOk: boolean,
 ): SimResult {
-  if (!zkOk) {
-    return { ran: false, stdout: "", note: "blocked: zk verify failed" };
+  if (!sealOk) {
+    return { ran: false, stdout: "", note: "blocked: audit seal verify failed" };
   }
   if (policy.decision === "deny") {
     return { ran: false, stdout: "", note: "blocked: policy deny" };

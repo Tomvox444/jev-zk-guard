@@ -25,7 +25,6 @@ export type PolicyDecision = "allow" | "deny" | "review";
 export type PolicyResult = {
   decision: PolicyDecision;
   reasons: string[];
-  /** Thresholds used — kept for ZK public inputs later. */
   thresholds: {
     dangerousMax: number;
     exfilMax: number;
@@ -34,28 +33,14 @@ export type PolicyResult = {
   };
 };
 
-export type ZkLevel = "L1" | "L2" | "L3";
-
-export type ZkScheme =
-  | "sha256-commitment"
-  | "sigma-policy-path"
-  | "hamiltonian-fiat-shamir";
-
-/** Commitment + public statement a verifier can check without re-calling Jev. */
-export type ZkProof = {
-  level: ZkLevel;
-  scheme: ZkScheme;
-  /** Hash binding of command + judgment + policy (or scheme-specific root). */
-  commitment: string;
-  /** What the outside world sees. */
-  publicInputs: {
-    commandHash: string;
-    decision: PolicyDecision;
-    thresholds: PolicyResult["thresholds"];
-    level: ZkLevel;
-  };
-  /** Scheme-specific proof blob (JSON-serializable). */
-  proof: unknown;
+/** Tamper-evident audit seal (hash chain + Ed25519) — not a ZK proof. */
+export type AuditSeal = {
+  scheme: "ed25519-hash-chain";
+  seq: number;
+  prevHash: string;
+  entryHash: string;
+  signature: string;
+  keyId: string;
   verified: boolean;
 };
 
@@ -69,7 +54,7 @@ export type GuardVerdict = {
   command: ProposedCommand;
   judgment: JevJudgment;
   policy: PolicyResult;
-  zk: ZkProof;
+  seal: AuditSeal;
   sim: SimResult;
 };
 
