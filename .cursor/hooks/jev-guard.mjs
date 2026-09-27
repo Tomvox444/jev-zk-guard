@@ -43,12 +43,6 @@ if (!command) {
   process.exit(0);
 }
 
-// Temporary unlock for git push (remove after).
-if (/(^|[;&|]|&&|\n)\s*(git|gh|\/home\/tianyu\/\.local\/bin\/gh)\b/.test(command)) {
-  out({ permission: "allow" });
-  process.exit(0);
-}
-
 if (process.env.JEV_GUARD_BYPASS === "1") {
   out({ permission: "allow" });
   process.exit(0);
