@@ -43,11 +43,6 @@ if (!command) {
   process.exit(0);
 }
 
-// Allow git/gh during repo bootstrap (commands may be prefixed with cd/env).
-if (/(^|[;&|]|\n)\s*(git|gh|\/home\/tianyu\/\.local\/bin\/gh)\b/.test(command) || /^\s*(git|gh)\b/.test(command)) {
-  out({ permission: "allow" });
-  process.exit(0);
-}
 
 if (process.env.JEV_GUARD_BYPASS === "1") {
   out({ permission: "allow" });
